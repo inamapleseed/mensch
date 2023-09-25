@@ -1,0 +1,955 @@
+<?php
+class ModelEcadvancedreportsProduct extends Model {
+	public function alterProductField() {
+		$sql = "SELECT COLUMN_NAME 
+				FROM INFORMATION_SCHEMA.COLUMNS
+				WHERE Table_Schema = '".DB_DATABASE."' AND TABLE_NAME = '".DB_PREFIX."product' AND COLUMN_NAME = 'cost'";
+
+		$query = $this->db->query( $sql );
+		if( count($query->rows) <= 0 ){ 
+			$sql ="ALTER TABLE `".DB_PREFIX."product`
+								ADD (`cost` decimal(15,4) DEFAULT 0.0000)";
+			$query = $this->db->query( $sql );
+		}
+	}
+	public function getReport($data = array()) {
+		$where = "1 ";
+		$product_id = 0;
+		if(isset($data['filter_product_id'])) {
+			$where .= " AND op.product_id = ".(int)$data['filter_product_id'];
+			$product_id = (int)$data['filter_product_id'];
+		}
+		$report_period = isset($data['report_period'])?$data['report_period']:'month';
+
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+
+		$cache_name = "ecreport.sale.product.".(int)$data['filter_store_id'].".".(int)$data['filter_order_status_id'].".".strtotime($data['filter_date_start']).".".strtotime($data['filter_date_end']).".".$product_id.".".$report_period;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+		if(!$reports) {
+
+			$select_datefield = ' CONCAT(MONTH(op.date_added),"/",YEAR(op.date_added)) AS datefield';
+			switch ($report_period) {
+				case 'day':
+					$select_datefield = 'DATE(op.date_added) AS datefield';
+					break;
+				case 'week':
+					$select_datefield = 'CONCAT(YEAR(op.date_added),"", WEEK(op.date_added)) AS datefield';
+					break;
+				case 'quarter':
+					$select_datefield = 'CONCAT(QUARTER(op.date_added),"/",YEAR(op.date_added)) AS datefield';
+					break;
+				case 'year':
+					$select_datefield = 'YEAR(op.date_added) AS datefield';
+					break;
+			}
+
+			$sql = "
+			SELECT op.product_id,op.name, op.order_status_id, op.store_id, ".$select_datefield.", op.model, op.order_id, 
+			IFNULL(SUM(op.total),0) AS total, IFNULL(SUM(op.quantity),0) AS orders, op.date_added, op.date_modified
+			FROM (
+			SELECT op.product_id,op.name,o.order_status_id, DATE(o.date_added) AS date_added_2, op.model, op.order_id, IFNULL(SUM(op.total + op.total * op.tax / 100),0) AS total, IFNULL(SUM(op.quantity),0) AS quantity, o.store_id, o.date_added, o.date_modified FROM ".DB_PREFIX."order_product op 
+			   LEFT JOIN `".DB_PREFIX."order` o ON (o.order_id = op.order_id) 
+			   WHERE ".$where."
+			   GROUP BY op.order_id
+			) op";
+
+			if (!empty($data['filter_order_status_id'])) {
+				$sql .= " WHERE op.order_status_id IN ( " . $data['filter_order_status_id'] . ")";
+			} else {
+				$sql .= " WHERE op.order_status_id > '0'";
+			}
+
+			if (!empty($data['filter_store_id'])) {
+				$sql .= " AND op.store_id = '" . (int)$data['filter_store_id'] . "'";
+			} else {
+				$sql .= " AND op.store_id = '0'";
+			}
+
+			if (!empty($data['filter_date_start'])) {
+				$sql .= " AND DATE(op.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+			}
+
+			if (!empty($data['filter_date_end'])) {
+				$sql .= " AND DATE(op.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+			}
+
+			$sql .= " GROUP BY datefield ";
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->rows;
+
+			$this->cache->set($cache_name, $reports);
+		}
+		return $reports;
+	}
+
+	public function getBestseller($data = array()) {
+		$this->alterProductField();
+		$limit = isset($data['limit'])?$data['limit']:10;
+
+		$sql = "SELECT op.product_id,op.model, op.name,p.cost,  IFNULL(SUM(op.total + op.total * op.tax / 100),0) AS total, IFNULL(SUM(op.quantity),0) AS quantity, o.store_id, o.date_added, COUNT(*) AS total_sale FROM " . DB_PREFIX . "order_product op LEFT JOIN `" . DB_PREFIX . "order` o ON (op.order_id = o.order_id) LEFT JOIN `" . DB_PREFIX . "product` p ON (op.product_id = p.product_id) ";
+		$sql .= " LEFT JOIN ". DB_PREFIX . "product_to_category p2c ON (p2c.product_id = p.product_id) ";
+		$sql .= " LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON (p.product_id = p2s.product_id) ";
+		$sql .= " WHERE 1 ";
+
+		if (!empty($data['filter_category_id'])) {
+			$sql .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$sql .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+		if (!empty($data['filter_order_status_id'])) {
+			$sql .= " AND o.order_status_id IN (" . $data['filter_order_status_id'] . ")";
+		} else {
+			$sql .= " AND o.order_status_id > '0'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$sql .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$sql .= " AND p2s.store_id = '0'";
+		}
+
+		if (!empty($data['filter_date_start'])) {
+			$sql .= " AND DATE(o.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+		}
+
+		if (!empty($data['filter_date_end'])) {
+			$sql .= " AND DATE(o.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+		}
+
+		$sql .= " GROUP BY p.product_id";
+		$sql .= " ORDER BY total_sale DESC, quantity DESC ";
+
+		if(!isset($data['all']) || !$data['all']) {
+			$sql .= " LIMIT " . (int)$limit;
+		}
+		
+
+		$query = $this->db->query($sql);
+
+		return $query->rows;
+	}
+
+	public function  getTotalNotSoldReport($data = array()) {
+
+
+		if (!empty($data['filter_date_start']) || !empty($data['filter_date_end'])) {
+			$where = "1 ";
+		} else {
+			$where = "op.product_id Is NULL ";
+		}
+		if (!empty($data['filter_store_id'])) {
+			$where .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$where .= " AND p2s.store_id = '0'";
+		}
+
+		if (!empty($data['filter_category_id'])) {
+			$where .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$where .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+
+		if (!empty($data['filter_product_id'])) {
+			$where .= " AND p.product_id = '" . (int)$data['filter_product_id'] . "'";
+		}
+
+		if ((int)$data['filter_quantity'] >= 0) {
+			$where .= " AND p.quantity <= " . (int)$data['filter_quantity'];
+		}
+
+		if (!empty($data['filter_date_start']) || !empty($data['filter_date_end'])) {
+			$where1 = " AND p.product_id NOT IN(SELECT p.product_id
+		    FROM `".DB_PREFIX."product` p 
+			LEFT JOIN `".DB_PREFIX."product_description` pd ON (pd.product_id = p.product_id)
+			LEFT JOIN `".DB_PREFIX."product_to_category` p2c ON (p2c.product_id = p.product_id) 
+		   	LEFT JOIN `".DB_PREFIX."product_to_store` p2s ON (p2s.product_id = p.product_id)
+		   	LEFT JOIN `".DB_PREFIX."order_product` op ON (p.product_id = op.product_id)
+		   	LEFT JOIN `".DB_PREFIX."order` o ON (op.order_id = o.order_id) WHERE ".$where;
+
+			if (!empty($data['filter_date_start'])) {
+				$where1 .= " AND DATE(o.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+			}
+
+			if (!empty($data['filter_date_end'])) {
+				$where1 .= " AND DATE(o.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+			}
+			$where1 .= " GROUP BY p.product_id ) ";
+
+			$sql = "SELECT COUNT(DISTINCT p.product_id) `total` FROM ".DB_PREFIX."product p 
+			    LEFT JOIN ".DB_PREFIX."product_to_category p2c ON ( p.product_id = p2c.product_id ) 
+			    LEFT JOIN ".DB_PREFIX."product_to_store p2s ON ( p.product_id = p2s.product_id ) 
+				WHERE ".$where.$where1;
+
+		} else {
+			$sql = "SELECT COUNT(DISTINCT p.product_id) `total` FROM ".DB_PREFIX."product p 
+			   LEFT JOIN ".DB_PREFIX."product_to_category p2c ON ( p.product_id = p2c.product_id ) 
+			   LEFT JOIN ".DB_PREFIX."product_to_store p2s ON ( p.product_id = p2s.product_id ) 
+			   LEFT JOIN `".DB_PREFIX."order_product` op ON (p.product_id = op.product_id)
+			   LEFT JOIN `".DB_PREFIX."order` o ON (op.order_id = o.order_id)
+			   WHERE ".$where;
+		}
+		
+		$query = $this->db->query($sql);
+		return isset($query->row['total'])?$query->row['total']:0;
+	}
+
+	public function getNotSoldReport($data = array()) {
+
+		$this->alterProductField();
+
+		if (!empty($data['filter_date_start']) || !empty($data['filter_date_end'])) {
+			$where = "1 ";
+		} else {
+			$where = "op.product_id Is NULL ";
+		}
+		
+
+		if (!empty($data['filter_category_id'])) {
+			$where .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$where .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+
+		if ((int)$data['filter_quantity'] >= 0) {
+			$where .= " AND p.quantity <= " . (int)$data['filter_quantity'];
+		}
+
+		if (!empty($data['filter_product_id'])) {
+			$where .= " AND p.product_id = '" . (int)$data['filter_product_id'] . "'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$where .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$where .= " AND p2s.store_id = '0'";
+		}
+		if (!empty($data['filter_date_start']) || !empty($data['filter_date_end'])) {
+			$where1 = " AND p.product_id NOT IN(SELECT p.product_id
+		    FROM `".DB_PREFIX."product` p 
+			LEFT JOIN `".DB_PREFIX."product_description` pd ON (pd.product_id = p.product_id)
+			LEFT JOIN `".DB_PREFIX."product_to_category` p2c ON (p2c.product_id = p.product_id) 
+		   	LEFT JOIN `".DB_PREFIX."product_to_store` p2s ON (p2s.product_id = p.product_id)
+		   	LEFT JOIN `".DB_PREFIX."order_product` op ON (p.product_id = op.product_id)
+		   	LEFT JOIN `".DB_PREFIX."order` o ON (op.order_id = o.order_id) WHERE ".$where;
+
+			if (!empty($data['filter_date_start'])) {
+				$where1 .= " AND DATE(o.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+			}
+
+			if (!empty($data['filter_date_end'])) {
+				$where1 .= " AND DATE(o.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+			}
+			$where1 .= " GROUP BY p.product_id ) ";
+
+			$sql = "SELECT p.product_id, p.image, pd.name, p.model, p.sku, p.quantity, p.price, p.cost, IFNULL((p.cost * p.quantity),0) AS total_cost, IFNULL((p.price * p.quantity),0) AS product_value
+		    FROM `".DB_PREFIX."product` p 
+			LEFT JOIN `".DB_PREFIX."product_description` pd ON (pd.product_id = p.product_id)
+			LEFT JOIN `".DB_PREFIX."product_to_category` p2c ON (p2c.product_id = p.product_id) 
+		   	LEFT JOIN `".DB_PREFIX."product_to_store` p2s ON (p2s.product_id = p.product_id)
+		   	
+			WHERE ".$where.$where1."
+			GROUP BY p.product_id";
+
+		} else {
+			$sql = "SELECT p.product_id, p.image, pd.name, p.model, p.sku, p.quantity, p.price, p.cost, IFNULL((p.cost * p.quantity),0) AS total_cost, IFNULL((p.price * p.quantity),0) AS product_value
+		    FROM `".DB_PREFIX."product` p 
+			LEFT JOIN `".DB_PREFIX."product_description` pd ON (pd.product_id = p.product_id)
+			LEFT JOIN `".DB_PREFIX."product_to_category` p2c ON (p2c.product_id = p.product_id) 
+		   	LEFT JOIN `".DB_PREFIX."product_to_store` p2s ON (p2s.product_id = p.product_id)
+		   	LEFT JOIN `".DB_PREFIX."order_product` op ON (p.product_id = op.product_id)
+		   	LEFT JOIN `".DB_PREFIX."order` o ON (op.order_id = o.order_id)
+		   	
+			WHERE ".$where."
+			GROUP BY p.product_id";
+		}
+
+
+		$sort_data = array(
+			'pd.name',
+			'p.quantity',
+			'p.cost',
+			'p.price',
+			'p.model',
+			'total_cost',
+			'purchases_value',
+			'purchases_quantity',
+			'product_value'
+		);
+		
+		$sort_field = "pd.name";
+		$sort_dir = "asc";
+		$start = 0;
+		$limit = 20;
+
+		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
+			$sql .= " ORDER BY " . $data['sort'];
+			$sort_field = $data['sort'];
+		} else {
+			$sql .= " ORDER BY pd.name";
+		}
+		
+		if (isset($data['order']) && ($data['order'] == 'DESC')) {
+			$sql .= " DESC";
+			$sort_dir = "desc";
+		} else {
+			$sql .= " ASC";
+		}
+
+		if(!isset($data['all']) || !$data['all']) {
+			if (isset($data['start']) || isset($data['limit'])) {
+				if (!isset($data['start']) || $data['start'] < 0) {
+					$data['start'] = 0;
+				}			
+
+				if (!isset($data['limit']) || $data['limit'] < 1) {
+					$data['limit'] = 20;
+				}	
+				$start = (int)$data['start'];
+				$limit = (int)$data['limit'];
+				$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+			}
+		}
+		//echo $sql;die();
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+
+		$cache_name = "ecreport.sale.reportnotsold.".(int)$data['filter_store_id'].".".(int)$data['filter_category_id'].".".(int)$data['filter_quantity'].".".$sort_field.".".$sort_dir.".".$start.".".$limit;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+		if(!$reports) {
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->rows;
+
+			if($reports) {
+				$product_ids = array();
+				$key_array = array();
+				foreach($reports as $key=>$item) {
+					$product_ids[] = (int)$item['product_id'];
+					$key_array[(int)$item['product_id']] = $key;
+				}
+				
+					
+			}
+			//if($enable_cache) {
+			//	$this->cache->set($cache_name, $reports);
+			//}
+		}
+		return $reports;
+	}
+
+	public function  getTotalInventoryReport($data = array()) {
+
+		$sql = "SELECT COUNT(DISTINCT p.product_id) `total` FROM ".DB_PREFIX."product p 
+		   LEFT JOIN ".DB_PREFIX."product_to_category p2c ON ( p.product_id = p2c.product_id ) 
+		   LEFT JOIN ".DB_PREFIX."product_to_store p2s ON ( p.product_id = p2s.product_id ) ";
+
+		$sql .= " WHERE 1 ";
+		if (!empty($data['filter_store_id'])) {
+			$sql .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$sql .= " AND p2s.store_id = '0'";
+		}
+
+		if (!empty($data['filter_category_id'])) {
+			$sql .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$sql .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+
+		if (!empty($data['filter_product_id'])) {
+			$sql .= " AND p.product_id = '" . (int)$data['filter_product_id'] . "'";
+		}
+
+		if ((int)$data['filter_quantity'] >= 0) {
+			$sql .= " AND p.quantity <= " . (int)$data['filter_quantity'];
+		}
+		
+		$query = $this->db->query($sql);
+
+		return isset($query->row['total'])?$query->row['total']:0;
+	}
+
+	public function getInventoryReport($data = array()) {
+
+		$this->alterProductField();
+
+		$where = "1 ";
+
+		if (!empty($data['filter_category_id'])) {
+			$where .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$where .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+
+		if ((int)$data['filter_quantity'] >= 0) {
+			$where .= " AND p.quantity <= " . (int)$data['filter_quantity'];
+		}
+
+		if (!empty($data['filter_product_id'])) {
+			$where .= " AND p.product_id = '" . (int)$data['filter_product_id'] . "'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$where .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$where .= " AND p2s.store_id = '0'";
+		}
+
+		$select = "IFNULL(DISTINCT (p.price * p.quantity),0) AS product_value, IFNULL(SUM(DISTINCTop.total + op.total * op.tax / 100),0) AS purchases_value ";
+
+		$sql = "SELECT p.product_id, p.image, pd.name, p.model, p.sku, p.quantity, p.price, p.cost, IFNULL((p.cost * p.quantity),0) AS total_cost, IFNULL((p.price * p.quantity),0) AS product_value
+		    FROM `".DB_PREFIX."product` p 
+			LEFT JOIN `".DB_PREFIX."product_description` pd ON (pd.product_id = p.product_id)
+			LEFT JOIN `".DB_PREFIX."product_to_category` p2c ON (p2c.product_id = p.product_id) 
+		   	LEFT JOIN `".DB_PREFIX."product_to_store` p2s ON (p2s.product_id = p.product_id)
+		   	
+			WHERE ".$where."
+			GROUP BY p.product_id";
+
+		$sort_data = array(
+			'pd.name',
+			'p.quantity',
+			'p.cost',
+			'p.price',
+			'p.model',
+			'total_cost',
+			'purchases_value',
+			'purchases_quantity',
+			'product_value'
+		);
+		
+		$sort_field = "pd.name";
+		$sort_dir = "asc";
+		$start = 0;
+		$limit = 20;
+
+		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
+			$sql .= " ORDER BY " . $data['sort'];
+			$sort_field = $data['sort'];
+		} else {
+			$sql .= " ORDER BY pd.name";
+		}
+		
+		if (isset($data['order']) && ($data['order'] == 'DESC')) {
+			$sql .= " DESC";
+			$sort_dir = "desc";
+		} else {
+			$sql .= " ASC";
+		}
+		if(!isset($data['all']) || !$data['all']) {
+			if (isset($data['start']) || isset($data['limit'])) {
+				if (!isset($data['start']) || $data['start'] < 0) {
+					$data['start'] = 0;
+				}			
+
+				if (!isset($data['limit']) || $data['limit'] < 1) {
+					$data['limit'] = 20;
+				}	
+				$start = (int)$data['start'];
+				$limit = (int)$data['limit'];
+				$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+			}
+		}
+		
+		//echo $sql;die();
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+
+		$cache_name = "ecreport.sale.reportinventory.".(int)$data['filter_store_id'].".".(int)$data['filter_category_id'].".".(int)$data['filter_quantity'].".".$sort_field.".".$sort_dir.".".$start.".".$limit;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+		if(!$reports) {
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->rows;
+
+			if($reports) {
+				$product_ids = array();
+				$key_array = array();
+				foreach($reports as $key=>$item) {
+					$product_ids[] = (int)$item['product_id'];
+					$key_array[(int)$item['product_id']] = $key;
+				}
+				$select = "SELECT op.product_id, o.order_status_id, IFNULL(SUM(op.quantity),0) AS purchases_quantity, IFNULL(SUM(op.total + op.total * op.tax / 100),0) AS purchases_value 
+						FROM `".DB_PREFIX."order_product` op
+		   				LEFT JOIN `".DB_PREFIX."order` o ON (o.order_id = op.order_id)
+		   				WHERE op.product_id IN (".implode(",", $product_ids).") AND (o.order_status_id > '0' OR ISNULL(o.order_status_id)) 
+		   				GROUP BY op.product_id
+					";
+				$query = $this->db->query($select);
+				if($rows = $query->rows) {
+					foreach($rows as $item) {
+						$key = $key_array[(int)$item['product_id']];
+						$reports[$key]['purchases_quantity'] =  $item['purchases_quantity'];
+						$reports[$key]['purchases_value'] = $item['purchases_value'];
+						$reports[$key]['order_status_id'] = $item['order_status_id'];
+					}
+				}
+				
+					
+			}
+			//if($enable_cache) {
+			//	$this->cache->set($cache_name, $reports);
+			//}
+		}
+		return $reports;
+	}
+
+	public function  getTotalProductList($data = array()) {
+
+		$sql = "SELECT COUNT(DISTINCT p.product_id) `total` FROM ".DB_PREFIX."product p 
+		   LEFT JOIN ".DB_PREFIX."product_to_category p2c ON ( p.product_id = p2c.product_id ) 
+		   LEFT JOIN ".DB_PREFIX."product_to_store p2s ON ( p.product_id = p2s.product_id ) ";
+
+		$sql .= " WHERE 1 ";
+		if (!empty($data['filter_store_id'])) {
+			$sql .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$sql .= " AND p2s.store_id = '0'";
+		}
+
+		if (!empty($data['filter_category_id'])) {
+			$sql .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$sql .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+		
+		$query = $this->db->query($sql);
+
+		return isset($query->row['total'])?$query->row['total']:0;
+	}
+
+	public function getProductList($data = array()) {
+
+		$this->alterProductField();
+
+		$where = "1 ";
+
+		if (!empty($data['filter_category_id'])) {
+			$where .= " AND p2c.category_id = '" . (int)$data['filter_category_id'] . "'";
+		}
+
+		if (!empty($data['filter_manufacturer'])) {
+			$where .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer'] . "'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$where .= " AND p2s.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$where .= " AND p2s.store_id = '0'";
+		}
+
+		$sql = "SELECT p.product_id, p.image, pd.name, p.mpn,p.upc, p.model, p.sku, p.quantity, p.price, p.cost
+		    FROM `".DB_PREFIX."product` p 
+			LEFT JOIN `".DB_PREFIX."product_description` pd ON (pd.product_id = p.product_id)
+			LEFT JOIN `".DB_PREFIX."product_to_category` p2c ON (p2c.product_id = p.product_id) 
+		   	LEFT JOIN `".DB_PREFIX."product_to_store` p2s ON (p2s.product_id = p.product_id)
+		   	
+			WHERE ".$where."
+			GROUP BY p.product_id";
+
+		$sort_data = array(
+			'pd.name',
+			'p.quantity',
+			'p.mpn',
+			'p.upc',
+			'p.cost',
+			'p.price',
+			'p.model',
+			'total_cost',
+			'purchases_value',
+			'purchases_quantity',
+			'product_value'
+		);
+		
+		$sort_field = "pd.name";
+		$sort_dir = "asc";
+		$start = 0;
+		$limit = 20;
+
+		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
+			$sql .= " ORDER BY " . $data['sort'];
+			$sort_field = $data['sort'];
+		} else {
+			$sql .= " ORDER BY pd.name";
+		}
+		
+		if (isset($data['order']) && ($data['order'] == 'DESC')) {
+			$sql .= " DESC";
+			$sort_dir = "desc";
+		} else {
+			$sql .= " ASC";
+		}
+		if(!isset($data['all']) || !$data['all']) {
+			if (isset($data['start']) || isset($data['limit'])) {
+				if (!isset($data['start']) || $data['start'] < 0) {
+					$data['start'] = 0;
+				}			
+
+				if (!isset($data['limit']) || $data['limit'] < 1) {
+					$data['limit'] = 20;
+				}	
+				$start = (int)$data['start'];
+				$limit = (int)$data['limit'];
+				$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+			}
+		}
+		
+		//echo $sql;die();
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+
+		$cache_name = "ecreport.sale.reportlistproduct.".(int)$data['filter_store_id'].".".(int)$data['filter_category_id'].".".$sort_field.".".$sort_dir.".".$start.".".$limit;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+		if(!$reports) {
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->rows;
+		}
+		return $reports;
+	}
+
+	public function getTotalReportProduct($data = array()) {
+		$sql = "SELECT COUNT(DISTINCT op.product_id) `total` FROM ".DB_PREFIX."order_product op 
+		   LEFT JOIN `".DB_PREFIX."order` o ON (o.order_id = op.order_id) ";
+
+		if (!empty($data['filter_order_status_id'])) {
+			$sql .= " WHERE o.order_status_id IN ( " . $data['filter_order_status_id'] . ")";
+		} else {
+			$sql .= " WHERE o.order_status_id > '0'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$sql .= " AND o.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$sql .= " AND o.store_id = '0'";
+		}
+
+		if (!empty($data['filter_date_start'])) {
+			$sql .= " AND DATE(o.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+		}
+
+		if (!empty($data['filter_date_end'])) {
+			$sql .= " AND DATE(o.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+		}
+		
+		$query = $this->db->query($sql);
+		
+		return isset($query->row['total'])?$query->row['total']:0;
+	}	
+
+
+	public function getReportProduct($data = array()) {
+		$where = "1";
+		if (!empty($data['filter_order_status_id'])) {
+			$where .= " AND o.order_status_id IN ( " . $data['filter_order_status_id'] . ")";
+		} else {
+			$where .= " AND o.order_status_id > '0'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$where .= " AND o.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$where .= " AND o.store_id = '0'";
+		}
+
+		if (!empty($data['filter_date_start'])) {
+			$where .= " AND DATE(o.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+		}
+
+		if (!empty($data['filter_date_end'])) {
+			$where .= " AND DATE(o.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+		}
+		if(isset($data['include_tax']) && $data['include_tax'] ) {
+			$select = "IFNULL(SUM(op.total + op.tax),0) AS product_revenue, AVG(op.total + op.tax) price_avg";
+			$data['include_tax'] = "included";
+		} else {
+			$select = "IFNULL(SUM(op.total),0) AS product_revenue, AVG(op.total) price_avg";
+			$data['include_tax'] = "excluded";
+		}
+
+		$sql = "SELECT op.product_id, op.name, op.tax, COUNT(op.order_id) unique_purchases, op.model,".$select.", IFNULL(SUM(op.quantity),0) AS quantity, IFNULL(SUM(op.reward),0) AS reward, AVG(op.quantity) quantity_avg, AVG(op.reward) reward_avg  FROM ".DB_PREFIX."order_product op 
+			   LEFT JOIN `".DB_PREFIX."order` o ON (o.order_id = op.order_id) 
+			   WHERE ".$where."
+			   GROUP BY op.product_id";
+
+		$sort_data = array(
+			'op.name',
+			'op.number_orders',
+			'op.model',
+			'product_revenue',
+			'price_avg',
+			'reward',
+			'unique_purchases',
+			'quantity_avg',
+			'reward_avg'
+		);	
+		
+		$sort_field = "op.name";
+		$sort_dir = "asc";
+		$start = 0;
+		$limit = 20;
+
+		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
+			$sql .= " ORDER BY " . $data['sort'];
+			$sort_field = $data['sort'];
+		} else {
+			$sql .= " ORDER BY op.name";
+		}
+		
+		if (isset($data['order']) && ($data['order'] == 'DESC')) {
+			$sql .= " DESC";
+			$sort_dir = "desc";
+		} else {
+			$sql .= " ASC";
+		}
+
+		if(!isset($data['all']) || !$data['all']) {
+			if (isset($data['start']) || isset($data['limit'])) {
+				if (!isset($data['start']) || $data['start'] < 0) {
+					$data['start'] = 0;
+				}			
+
+				if (!isset($data['limit']) || $data['limit'] < 1) {
+					$data['limit'] = 20;
+				}	
+				$start = (int)$data['start'];
+				$limit = (int)$data['limit'];
+				$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+			}
+		}
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+
+		$cache_name = "ecreport.sale.reportproduct.".(int)$data['filter_store_id'].".".(int)$data['filter_order_status_id'].".".strtotime($data['filter_date_start']).".".strtotime($data['filter_date_end']).".".$data['include_tax'].".".$sort_field.".".$sort_dir.".".$start.".".$limit;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+		if(!$reports) {
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->rows;
+
+			//if($enable_cache) {
+			//	$this->cache->set($cache_name, $reports);
+			//}
+		}
+		return $reports;
+	}
+
+	public function getIndividualReportProduct($data = array()) {
+		$where = "1";
+		if (!empty($data['filter_order_status_id'])) {
+			$where .= " AND o.order_status_id IN ( " . $data['filter_order_status_id'] . ")";
+		} else {
+			$where .= " AND o.order_status_id > '0'";
+		}
+
+		if (!empty($data['filter_store_id'])) {
+			$where .= " AND o.store_id = '" . (int)$data['filter_store_id'] . "'";
+		} else {
+			$where .= " AND o.store_id = '0'";
+		}
+
+		if (!empty($data['filter_date_start'])) {
+			$where .= " AND DATE(o.date_added) >= '" . $this->db->escape($data['filter_date_start']) . "'";
+		}
+
+		if (!empty($data['filter_date_end'])) {
+			$where .= " AND DATE(o.date_added) <= '" . $this->db->escape($data['filter_date_end']) . "'";
+		}
+
+		if (!empty($data['product_id'])){
+			$where .= " AND op.product_id = '" . (int)$data['product_id'] . "'";
+		}
+
+		if(isset($data['include_tax']) && $data['include_tax'] ) {
+			$select = "IFNULL(SUM(op.total + op.tax),0) AS product_revenue, AVG(op.total + op.tax) price_avg";
+			$data['include_tax'] = "included";
+		} else {
+			$select = "IFNULL(SUM(op.total),0) AS product_revenue, AVG(op.total) price_avg";
+			$data['include_tax'] = "excluded";
+		}
+
+		$sql = "SELECT op.product_id, op.name, op.tax, COUNT(op.order_id) unique_purchases, op.model,".$select.", IFNULL(SUM(op.quantity),0) AS quantity, IFNULL(SUM(op.reward),0) AS reward, AVG(op.quantity) quantity_avg, AVG(op.reward) reward_avg  FROM ".DB_PREFIX."order_product op 
+			   LEFT JOIN `".DB_PREFIX."order` o ON (o.order_id = op.order_id) 
+			   WHERE ".$where."
+			   GROUP BY op.product_id";
+
+		$sort_data = array(
+			'op.name',
+			'op.number_orders',
+			'op.model',
+			'product_revenue',
+			'price_avg',
+			'reward',
+			'unique_purchases',
+			'quantity_avg',
+			'reward_avg'
+		);	
+		
+		$sort_field = "op.name";
+		$sort_dir = "asc";
+		$start = 0;
+		$limit = 20;
+
+		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
+			$sql .= " ORDER BY " . $data['sort'];
+			$sort_field = $data['sort'];
+		} else {
+			$sql .= " ORDER BY op.name";
+		}
+		
+		if (isset($data['order']) && ($data['order'] == 'DESC')) {
+			$sql .= " DESC";
+			$sort_dir = "desc";
+		} else {
+			$sql .= " ASC";
+		}
+
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+
+		$cache_name = "ecreport.sale.reportproduct2.".(int)$data['filter_store_id'].".".(int)$data['filter_order_status_id'].".".strtotime($data['filter_date_start']).".".strtotime($data['filter_date_end']).".".$data['include_tax'].".".$sort_field.".".$sort_dir.".".$start.".".$limit;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+		if(!$reports) {
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->row;
+
+			//if($enable_cache) {
+			//	$this->cache->set($cache_name, $reports);
+			//}
+		}
+		return $reports;
+	}
+
+	public function getProductViews($product_id) {
+		$query = $this->db->query("SELECT viewed FROM ".DB_PREFIX."product WHERE product_id = '".(int)$product_id."'");
+
+		return !empty($query->row['viewed'])?$query->row['viewed']:0;
+	}
+
+	public function getFirstOrderPlacedDate() {
+	    $implode = array();
+        
+		foreach ($this->config->get('config_complete_status') as $order_status_id) {
+			$implode[] = "'" . (int)$order_status_id . "'";
+		}
+		
+	    $query = $this->db->query("SELECT DISTINCT MIN(order_id) AS order_id, date_added FROM `" . DB_PREFIX . "order` WHERE order_status_id IN(" . implode(",", $implode) . ")");
+	    
+	    return !empty($query->row['date_added'])?$query->row['date_added']:0;
+	}
+
+	public function getTotalProductOrders( $data = array() ) {
+		$sql = "SELECT COUNT(op.product_id) `total` FROM ".DB_PREFIX."order_product op";
+
+		if (!empty($data['filter_product_id'])) {
+			$sql .= " WHERE op.product_id = ".(int)$data['filter_product_id'];
+		}
+		$query = $this->db->query($sql);
+		
+		return $query->row['total'];
+	}
+
+	public function getProductOrders( $data = array() ) {
+		$where = "1";
+		if (!empty($data['filter_product_id'])) {
+			$where .= " AND op.product_id =".(int)$data['filter_product_id'];
+		}
+		$where .= " AND os.language_id = '" . (int)$this->config->get('config_language_id') . "'";
+
+		$sql = "SELECT op.order_id, op.total, op.quantity, op.reward, CONCAT(o.payment_firstname, ' ', o.payment_lastname) as payment_name, CONCAT(o.shipping_firstname, ' ', o.shipping_lastname) as shipping_name, o.date_added,o.order_status_id, os.name  `order_status` FROM ".DB_PREFIX."order_product op 
+			   LEFT JOIN `".DB_PREFIX."order` o ON (o.order_id = op.order_id)
+			   LEFT JOIN `".DB_PREFIX."order_status` os ON (os.order_status_id = o.order_status_id)
+			   WHERE ".$where;
+
+		$start = 0;
+		$limit = 20;
+
+		$sql .= " ORDER BY o.order_id";
+		
+		if (isset($data['start']) || isset($data['limit'])) {
+			if (!isset($data['start']) || $data['start'] < 0) {
+				$data['start'] = 0;
+			}			
+
+			if (!isset($data['limit']) || $data['limit'] < 1) {
+				$data['limit'] = 20;
+			}	
+			$start = (int)$data['start'];
+			$limit = (int)$data['limit'];
+			$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+		}
+
+		$enable_cache = $this->config->get('ecadvancedreports_enable_caching');
+		$enable_cache = $enable_cache?$enable_cache:0;
+		
+		$cache_name = "ecreport.sale.productorders.".(int)$data['filter_product_id'].".".$start.".".$limit;
+
+		$reports = array();
+		if($enable_cache) {
+			$reports = $this->cache->get($cache_name);
+		}
+
+		if(!$reports) {
+
+			$query = $this->db->query($sql);
+
+			$reports = $query->rows;
+
+			//if($enable_cache) {
+			//	$this->cache->set($cache_name, $reports);
+			//}
+		}
+		return $reports;
+	}
+
+	public function getInventoryProducts( $data = array()) {
+		
+	}
+
+}
+?>

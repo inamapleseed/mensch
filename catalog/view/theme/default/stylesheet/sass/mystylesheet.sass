@@ -1,0 +1,1233 @@
+$exo: 'Exo', sans-serif
+$lato: 'Lato', sans-serif
+$w: #fff
+$b: #000
+$thm2: #D8EAEF
+$thm: #51CAE9
+
+*
+	font-family: $exo
+	outline: none !important
+	&::selection
+		background: $thm
+input
+	&::-ms-clear,
+	&::-ms-reveal
+		display: none !important
+select
+	cursor: pointer
+button, input
+	outline: none !important
+	&:focus
+		outline: none !important
+.enquiry-success
+	.checkout-success
+		text-align: center
+a:not(.sticker)
+	&:hover
+		color: $thm
+.cart-dorpdown-items
+	img
+		height: auto !important
+.cart-dorpdown-footer
+	a
+		background: $thm
+		border-color: $thm
+		color: $b !important
+		font-weight: 500 !important
+		&:hover
+			color: $w
+			border-color: $thm
+			background: $thm !important
+.swal2-confirm
+	border-color: $thm !important
+	background: $thm !important
+.checkout-success .line-4 a
+	&:hover
+		color: $thm !important
+  
+.account-register
+	.col-sm-12.p-0-i
+		@media (max-width: 767px)
+			text-align: center
+ 
+.btn-primary, #reorder_order, #quickcheckout-back, .account-password .btn-default
+	background: $thm !important
+	color: $b !important
+	text-transform: capitalize !important
+	border: none !important
+	font-weight: 500
+	font-size: 12px
+	border-radius: 5px !important
+	padding: 10px
+	min-width: 150px !important
+	max-width: 230px !important
+	display: flex		  
+	justify-content: space-around
+	&:hover, &:active, &:focus
+		background: $thm
+		color: $w !important
+.btn-default:not(.btn-number, #button-search, .product-button > .btn-default)
+	background: $thm !important
+	color: $b !important
+	text-transform: capitalize !important
+	border: none !important
+	font-weight: 500
+	font-size: 12px
+	border-radius: 5px
+	padding: 10px
+	width: 150px !important
+	display: flex		  
+	justify-content: space-around
+	&:hover, &:active, &:focus
+		background: $thm
+		color: $w !important
+.btn-number, #button-search, .product-button > .btn-default
+	background: $thm
+.btn-number
+	color: $b
+	&:hover
+		background: $thm !important
+		span
+			color: $w
+.quickcheckout-cart
+	.input-group-btn
+		button
+			padding: 6px 12px !important
+		.button-update
+			min-width: 0 !important
+#filter_group_tigger_open
+	padding: 6px 12px
+	border: 1px solid $b
+	min-width: 0 !important
+	font-weight: 500
+#button-coupon, #button-login
+	padding: .5em !important
+	Border-radius: 0 !important
+	min-width: 5em !important
+.btn-mi
+	min-width: 4em !important
+	padding: 4px 6px 0
+.glyphicon-minus
+	&:before
+		content: '-'
+		display: inline-block
+.glyphicon-plus
+	&:before
+		content: '+'
+		display: inline-block
+.account-container
+	a
+		&:hover
+			border-color: $thm !important
+			h3, span:before, p
+				color: $thm !important
+.cart-dorpdown-item-charges
+	max-width: 50%
+.alert
+	.alert-danger, .alert-success
+		margin-top: 3%
+#content
+	margin-bottom: 2em
+	line-height: 1.5em
+#mobileNav
+	i
+		color: $thm
+#sidr
+	.cd-accordion-menu
+		li
+			label
+				display: none
+			label ~ ul
+				display: none !important
+	a
+		color: $b
+		&:hover
+			// color: $w !important
+			font-weight: bold
+.account-forgotten
+	form
+		fieldset
+			padding-top: 3%
+.account-order
+	.modal-dialog
+		.modal-body
+			ul
+				margin: auto
+				width: auto
+				li
+					a
+						background: $thm
+						color: $b
+						border: 1px solid $thm
+						transition: .3s ease
+						.badge
+							color: $thm
+				&:hover
+					a
+						background: $w
+						color: $thm
+			#reorder_order
+				width: 170px
+				margin: 0 auto
+.information-contact-success
+	#content
+		text-align: center
+		.buttons
+			margin-top: 4em !important
+.pagination-container
+	text-align: center
+.pagination
+	li
+		a, span
+			border: none !important
+			color: $b
+			font-weight: bold
+			width: 25px !important
+			height: 25px !important
+			display: flex
+			align-items: center
+			justify-content: center
+			border-radius: 50%
+			margin: 0 .5em
+		a
+			background: transparent
+		&.active, &:hover
+			span, a
+				color: $w !important
+				background: $thm !important
+		&.arrow
+			a
+				color: $thm
+				font-weight: bold
+				font-size: 20px
+#side-price
+	.ui-slider-range, .ui-slider-handle
+		background: $thm !important
+	#slider-price
+		background: $b !important
+	.ui-slider-handle
+		width: 17px !important
+		height: 17px !important
+		border-radius: 0px !important
+		box-shadow: 0 2px 4px grey
+aside
+	#filter-groups
+		@media (min-width: 768px)
+			width: 95%
+		.item-header
+			font-weight: 500
+			font-size: 16px
+		#side-categories
+			.side-categories-level-1
+				margin-bottom: 12px
+				.item
+					&.level-1
+						border: 1px solid $thm
+						&.active, &:hover
+							background: $thm
+							.toggle
+								.plus
+									color: transparent
+									.minus
+										opacity: 1
+										color: $b
+					.toggle
+						.plus
+							position: relative
+							font-weight: 300
+							font-size: 30px
+							.minus
+								font-size: 40px
+								opacity: 0
+								position: absolute
+								right: 0
+								left: 0
+					a
+						color: $b
+						font-weight: 500
+				.sub
+					padding-left: 15px
+					.item
+						&.level-2
+							&.active, &:hover
+								a
+									text-decoration: underline
+.acount-reg-footer
+	display: flex
+	justify-content: space-between
+	align-items: center
+	@media (min-width: 768px)
+		#google_recaptcha
+			margin-bottom: 0
+			margin-left: 0
+	@media (max-width: 768px)
+		flex-direction: column
+		#google_recaptcha
+			margin-bottom: 10px !important
+.information-contact
+	#content
+		margin-bottom: 70px
+ 
+	@media (min-width: 991px)
+		#content
+			padding: 0
+		> .container
+			width: 100%
+			position: relative
+			padding: 0
+			> .row, > .breadcrumb
+				width: 85%
+				margin: 0 auto
+ 
+	@media (max-width: 990px)
+		> .container
+			width: 100%
+			position: relative
+			padding: 0
+ 
+			> .row, > .breadcrumb
+				margin: 0 auto
+ 
+	@media (max-width: 767px)
+		.breadcrumb
+			width: 90%
+			margin: 0 auto
+ 
+	@media (max-width: 991px) and (min-width: 768px)
+		> .container
+			> .row, > .breadcrumb
+				width: 90%
+ 
+	.col-sm-12
+		h3
+			font-weight: 600
+			font-size: 16px
+			padding-bottom: 15px
+ 
+		strong
+			font-weight: 600 !important
+ 
+		a
+			color: $b
+			&:hover
+ 
+	.col-md-9
+		padding-left: calc(0px + (70 - 0) * (100vw - 320px) / (1920 - 320))
+ 
+	form
+		.form-group
+			margin-bottom: 14px !important
+		input[type=text], input[type=tel]
+			height: 45px
+ 
+@media (min-width: 1200px)
+	.container
+		width: 85%
+		margin: 0 auto
+ 
+.iid-4
+	#content
+		@media (min-width: 991px)
+			padding: 0
+ 
+	.aboutus
+		padding: 0 !important
+		.about-container
+			@media (min-width: 991px)
+				padding-top: 15px
+ 
+			@media (max-width: 991px)
+				padding-top: 28px
+ 
+			.inner
+				display: flex
+				justify-content: space-between
+				margin-bottom: calc(15px + (25 - 15) * (100vw - 320px) / (1920 - 320))
+ 
+				.images
+					position: relative
+					display: flex
+					align-items: center
+ 
+					.inner-image
+						height: 96%
+						img
+							width: 100%
+							height: 100%
+							object-fit: cover
+ 
+				.text
+					height: 100%
+					overflow: auto
+					margin: 0 0 auto 0
+					display: flex
+					flex-direction: column
+ 
+					> div
+						margin: auto 0
+ 
+						h3
+							font-size: calc(20px + (28 - 20) * (100vw - 320px) / (1920 - 320))
+							font-weight: 600
+							margin-bottom: 15px
+ 
+						p
+							line-height: 2em
+							margin-bottom: 15px
+ 
+				@media (min-width: 1200px)
+					height: 400px
+ 
+				@media (max-width: 1200px) and (min-width: 991px)
+					height: 350px
+ 
+				@media (min-width: 991px)
+					.images
+						width: 48%
+ 
+					.text
+						width: 45%
+ 
+					&.even
+						.images
+							order: 2
+ 
+						.text
+								order: 1
+ 
+				@media (max-width: 991px)
+					flex-direction: column
+					.text
+						h3
+							margin: 35px 0 10px !important
+ 
+			@media (max-width: 991px) and (min-width: 768px)
+				width: 75%
+				margin: 0 auto
+
+.breadcrumb
+	text-align: center
+
+body
+	.article_listing_layout_3 > .container, > .container, .article_inner_layout_2 > .container, .information-contact > .container
+		padding-top: calc(0px + (55 - 0) * (100vw - 320px) / (1920 - 320)) !important
+
+.iid-8, .news-ncategory, .news-article, .information-contact, .information-booking
+	// background: $thm2
+
+.iid-8, .news-ncategory, .information-contact
+	.article_listing_layout_3 > .container, > .container
+		@media (min-width: 1200px)
+			width: 85% !important
+
+.news-article
+	.article_inner_layout_2 > .container
+		@media (min-width: 1200px)
+			width: 65% !important
+			margin: auto
+		h2
+			padding-bottom: calc(10px + (45 - 10) * (100vw - 320px) / (1920 - 320))
+
+		.blog-gallery
+			.slick-list
+				box-shadow: 0 20px 30px #888				
+			.slick-nav
+				img
+					max-width: 25px
+	
+.iid-8
+	.repeater-row-content
+		p
+			line-height: 1.75 !important
+			margin-bottom: 20px
+
+.news-ncategory
+	.article_listing_layout_3
+		h2
+			padding-bottom: calc(10px + (45 - 10) * (100vw - 320px) / (1920 - 320))
+		aside
+			h4
+				text-transform: capitalize
+				letter-spacing: 1px
+
+			@media (min-width: 991px)
+				padding-left: 0
+
+			.year
+				border-bottom: 1px solid #ccc
+				margin-bottom: 30px
+
+				.list-group-item
+					.year-wrap
+						background: #B0B0B0
+						border-radius: 8px
+						~ .list-group
+							padding-left: 12px
+							margin: 10px 0 !important
+					.toggle
+						.plus
+							color: $b !important
+							position: relative
+							.minus
+								color: transparent
+
+					&.active
+						.toggle
+							.plus
+								color: transparent !important
+								.minus
+									color: $b !important
+									position: absolute
+									right: 0
+									left: 0
+					&.active, &:hover
+						.year-wrap	
+							background: $thm						  
+
+			.news-ctgr
+				.list-group-item
+					background: #b0b0b0 !important
+					border-radius: 8px
+					&.active, &:hover
+						background: $thm !important
+
+			.list-group-item
+				margin-bottom: 10px
+				*
+					font-family: $lato
+					font-size: 12px
+					font-weight: 600
+
+			@media (max-width: 990px) and (min-width: 600px)
+				#articles-column-left
+					> *
+						max-width: 30%
+
+		@media (min-width: 991px)
+			aside
+				width: 21% !important
+			
+			#content
+				width: 77% !important
+				margin-left: 2%
+
+	.news-list-wrap
+		.news-post
+			flex-direction: column
+			@media (min-width: 768px)
+				width: calc((100%/2) - 30px)
+				margin: 15px
+
+.news-article
+	h2
+		padding-bottom: 0 !important
+	.article-inner
+		.pd-b15
+			h4
+				margin-bottom: 0
+
+		.at-share-btn-elements
+			> a
+				background: transparent !important
+
+		h4
+			text-transform: capitalize
+
+		.date-added
+			font-size: 13px
+			font-weight: 500
+			img
+				max-width: 22px
+		
+		p
+			margin-bottom: 20px
+			line-height: 1.75 !important
+
+	@media (max-width: 1100px)
+		.article_inner_layout_2
+			> .container
+				width: 85% !important
+				min-width: 85% !important
+
+.grey-btn
+	background: #ADADAD
+	border-radius: 6px
+	width: 150px
+	display: block
+	margin: auto
+	padding: 9px 10px
+	font-size: 13px
+	font-weight: 500
+
+header
+	> .container
+		@media (max-width: 1100px)
+			width: 95% !important
+		@media (min-width: 991px)
+			padding-right: 0
+		@media (max-width: 767px)
+			.header-container
+				padding: 5px !important
+	.header-logo-image
+		img
+			@media (min-width: 1100px)
+				max-width: 195px
+			@media (max-width: 1099px)
+				max-width: 155px
+
+	.header-top
+		@media (min-width: 1100px)
+			min-width: 160px
+			justify-content: space-between !important
+		.wyimg
+			max-width: 23px
+			max-height: 21px
+
+	#main-menu
+		padding-right: 30px
+		> li
+			a
+				color: $b !important
+				font-weight: 500 !important
+		*
+			font-family: $lato !important
+
+.information-contact
+	#content
+		h2
+			padding-bottom: calc(10px + (45 - 10) * (100vw - 320px) / (1920 - 320))
+
+		.col-sm-12 
+			h4
+				text-transform: capitalize
+
+		.col-md-5
+			@media (min-width: 1100px)
+				> div
+					max-width: 80%
+
+			> div
+				line-height: 1.75 !important
+				font-weight: 500
+	.contact-footer
+		display: flex
+		align-items: center
+		justify-content: space-between
+		@media (min-width: 768px)
+			#google_recaptcha
+				margin-bottom: 0 !important
+
+		@media (max-width: 767px)
+			justify-content: center !important
+			flex-direction: column
+
+.input-btn-con 
+	border-radius: 6px !important
+	input
+		background: transparent
+		border: none
+
+footer
+	.storename
+		font-weight: 500
+		text-transform: uppercase
+		font-size: 22px
+		letter-spacing: 1px
+	
+	.container
+		@media (min-width: 1200px)
+			width: 85% !important
+		
+		a, p
+			font-family: $lato
+
+	.footer-socmed
+		.footer-social-icons
+			@media (max-width: 767px)
+				padding-top: 15px
+			> a
+				margin-right: 15px
+				img
+					max-width: 20px
+					max-height: 20px
+
+	.footer-bottom
+		> .container
+			max-width: 95% !important
+			min-width: 95% !important
+			padding: 0
+
+			*
+				text-decoration: none
+				font-family: $lato
+				font-size: 13px !important
+			.row
+				margin: 0
+
+.section-space
+	&.calendar	
+		padding-top: 0 !important
+
+		> .container
+			@media (min-width: 1200px)
+				width: 66% !important
+			
+			@media (min-width: 991px) and (max-width: 1199px)
+				width: 86% !important
+			
+			@media (max-width: 767px)
+				width: 80% !important
+
+		.fc-header-toolbar
+			position: relative
+			background: $w
+			> .fc-right
+				width: 100%
+				position: absolute
+				top: 0
+				left: 0
+				right: 0
+					
+				.fc-today-button
+					display: none !important
+
+				.fc-button-group
+					width: 100%
+					display: flex
+					justify-content: space-between
+					margin: 0
+
+					> button
+						width: auto
+						flex: 0
+			> .fc-left
+				width: 100%
+				text-align: center
+
+		.fc-week
+			.fc-day
+				background: $w
+
+		.fc-future.fc-other-month 
+			color: transparent !important
+
+		.fc-today
+			.fc-day-number
+				background: $b
+				color: $w
+				border-radius: 50%
+
+		.calendar-info p
+			margin-bottom: 0
+
+		.calendar-info .inner
+			display: flex
+			align-items: center
+			justify-content: center
+			flex-wrap: wrap
+
+		.calendar-button
+			text-align: center
+			padding: 15px 30px
+			background: #f3f3f3			
+			width: 100%
+		#submit-booking
+			margin: auto
+		#submit-booking, #booking-submit
+			background: $b !important
+			color: $w !important
+			min-width: 120px
+			font-size: 14px !important
+			&::after
+				display: none
+
+	.modal-footer
+		display: flex
+		align-items: center
+		justify-content: space-between		
+		@media (min-width: 991px)
+			#google_recaptcha
+				margin-bottom: 0
+
+.common-home
+	#content
+		margin-bottom: 0
+
+	#slideshow0
+		.slider-dots
+			display: none	
+
+	> .container
+		padding-top: 0 !important
+
+	.custom2
+		padding: 0
+		> .container
+			width: 100% !important
+			padding: 0
+
+			.slides-container
+				.slick-slide
+					position: relative
+					img
+						max-width: 100%
+						
+					.overlay-text
+						margin: auto
+						left: 0
+						right: 0
+						display: flex
+						flex-direction: column
+						justify-content: center		
+						@media (min-width: 768px)
+							max-width: 84%
+							position: absolute
+							top: 10%
+							bottom: 15%
+							
+						@media (max-width: 767px)
+							position: static	
+							background: rgba(255,255,255,.4)
+							top: 0
+							max-width: 100%
+							bottom: 0
+							padding: 30px							
+						h2
+							margin-bottom: 5px !important
+							text-transform: uppercase !important
+							text-align:	left !important
+							p
+								font-size: calc(21px + (50 - 21) * (100vw - 320px) / (1920 - 320)) !important
+								font-weight: 600
+								margin-bottom: 0px !important
+								line-height: 1.2 !important
+
+							&::before
+								display: none
+
+						h4
+							text-transform: none
+							font-family: 'Lato'
+							font-style: italic
+							font-size: calc(18px + (21 - 18) * (100vw - 320px) / (1920 - 320))
+						
+						a
+							margin-top: 30px
+
+			.slick-dots
+				bottom: 10%
+				width: 84%
+				margin: auto
+				left: 0
+				right: 0
+				display: flex !important
+				align-items: center
+				li
+					&.slick-active
+						button
+							background: #50CAE9 !important
+
+			@media (min-width: 768px)
+				.mobile
+					display: none
+				.slick-dots
+					position: absolute
+
+			@media (max-width: 767px)
+				.desktop
+					display: none
+				.slick-dots
+					position: static
+					margin-bottom: 10px
+
+.output-container
+	display: flex
+	margin-top: 40px
+	.products-to-compare
+		display: flex
+		justify-content: center
+		.cross-mark
+			font-weight: 700
+			font-size: 35px
+			color: red
+
+		> div
+			box-shadow: 0 0 5px #ccc
+
+		.specs-con
+			text-align: center
+			width: 100%
+			> div
+				border-bottom: 1px solid #ccc
+				margin-bottom: 15px
+				padding-bottom: 15px
+
+		@media (min-width: 768px)
+			width: 30%
+			.specs-con
+				padding: 30px
+
+	@media (max-width: 767px)
+		.products-to-compare
+			// width: 33%
+			.specs-con
+				padding: 15px 10px
+			
+		.ghost-div
+			width: 2% !important
+
+.selections-con
+	display: flex
+	align-items: center
+	justify-content: center
+
+	> h3
+		margin-bottom: 0
+		font-family: $exo !important
+		width: 5%
+		text-align: center
+
+	@media (min-width: 768px)
+		> select
+			width: 30%
+
+	@media (max-width: 767px)
+		flex-direction: column
+		> select
+			width: 70%
+		> *
+			margin: 10px 0 !important
+		
+		.enable-select3.ghost
+			display: none
+
+.cart-dorpdown-footer
+	a
+		width: calc((100% /2) - 10px) !important
+
+.button-update
+	width: auto !important
+	margin: 0
+	height: auto
+	display: flex
+	align-items: center
+
+.terms
+	#button-payment-method
+		margin-left: auto
+
+.common-home
+	.custom4
+		.custom-container
+			margin: calc(0px + (80 - 0) * (100vw - 320px) / (1920 - 320)) auto
+			display: flex
+			flex-wrap: wrap
+			.der-box
+				margin: 10px 10px
+				position: relative
+				@media (min-width: 991px)
+					width: calc((100%/3) - 20px)
+
+				@media (max-width: 990px) and (min-width: 768px)
+					width: calc((100%/2) - 20px)
+
+				@media (max-width: 767px)
+					width: calc((100%/1) - 20px)
+	
+				&:hover
+					transform: scale(.95)
+					transition: .4s ease
+				a
+					position: absolute
+					z-index: 1
+					top: 0
+					bottom: 0
+					left: 0
+					right: 0					
+				img
+					max-width: 100%
+				.texts
+					position: absolute
+					h5
+						overflow: auto
+					h3
+						text-transform: uppercase !important
+						font-family: $exo !important
+						margin-bottom: 5px
+						letter-spacing: 1px
+
+					p
+						font-family: 'roboto'
+					
+					img
+						max-width: calc(25px + (35 - 25) * (100vw - 320px) / (1920 - 320))
+
+		@media (min-width: 768px)
+			.custom-container
+				max-width: 84%
+				.texts
+					bottom: 7%
+					width: 87%
+					margin: auto
+					left: 0
+					right: 0
+
+		@media (max-width: 767px)
+			padding: 20px 0 !important
+			.custom-container
+				max-width: 90%
+				.texts
+					width: 100%
+					top: 0
+					flex-direction: column
+					display: flex
+					justify-content: center
+					padding: 10px
+					bottom: 0
+					background: rgba(255,255,255,.2)
+
+.locate-con
+	display: flex
+	.maps
+		iframe
+			width: 100%
+			height: 100%
+	
+	.texts
+		> div
+			h3
+				text-align: center
+				font-size: calc(20px + (28 - 20) * (100vw - 320px) / (1920 - 320)) !important
+				letter-spacing: 1px				
+				font-family: $exo !important
+
+	@media (min-width: 768px)
+		.maps
+			width: 60%
+
+		.texts
+			width: 40%
+			> div
+				max-width: 75%
+				margin: auto
+				height: 100%
+				padding: 40px 0
+	
+	@media (max-width: 767px)
+		flex-direction: column
+		.texts
+			> div
+				max-width: 85%
+				margin: 20px auto
+
+.information-contact
+	.locate-con
+		display: none
+
+.product-category
+	> .container
+		width: 100%
+		background: #D5E8EC
+		padding: 0
+		> .row
+			margin: 0
+		#product-filter-replace
+			max-width: 84%
+			margin: auto
+		.product-gutter
+			&:hover
+				img
+					opacity: .5
+
+		.compare-con
+			background: $w
+			@media (min-width: 991px)
+				> *
+					max-width: 90%
+					margin-left: auto
+					margin-right: auto
+			h2
+				padding-top: 40px !important
+
+.product-image-block
+	text-align: left
+	
+	.product-name
+		text-align: center
+
+.product-product
+	> .container
+		width: 100%
+		padding: 0
+		> .row
+			margin: 0
+
+		#content
+			> *
+				@media (min-width: 991px)
+					width: 88%
+					margin: auto
+			h2
+				margin-bottom: calc(30px + (90 - 30) * (100vw - 320px) / (1920 - 320)) !important
+
+			.product-title
+				font-family: $exo !important
+				text-transform: uppercase !important
+				margin-bottom: 10px
+
+			.price-wrapper
+				.product-price.old-prices
+					font-weight: bold
+
+			#product
+				.checkbox
+					margin: 0 !important
+
+				.Colour
+					.radio
+						width: auto
+						padding-left: 0
+						margin: 0 10px 0 0
+						input
+							opacity: 0
+							position: absolute
+						input:checked
+							+ div
+								&::after
+									content: ''
+									border: 1px solid grey
+									width: 48px
+									height: 48px
+									display: block
+									border-radius: 50%
+									position: absolute
+									top: -4px
+									left: -4px
+
+					.color-con
+						width: 40px
+						height: 40px
+						border-radius: 50%
+				
+			.product-button-group
+				display: flex
+				margin-bottom: 0
+				> *
+					width: auto !important
+				.quantity-wrapper
+					max-width: 120px
+					padding: 0
+					.input-group
+						height: 38px
+						.input-group-btn
+							&:first-of-type
+								button
+									border-top-left-radius: 5px
+									border-bottom-left-radius: 5px
+									border-right: none
+							&:last-of-type
+								button
+									border-top-right-radius: 5px
+									border-bottom-right-radius: 5px
+									border-left: none
+
+						input[type=text]
+							min-width: 30px
+							height: 100%
+
+						> *
+							flex: 0
+
+			.product-image-main, .product-image-additional
+				.slick-slide
+					img
+						border: 1px solid #ddd
+
+			.product-image-additional
+				.slick-nav
+					img
+						width: 30px
+
+	.related_related_products_
+		> h3
+			font-family: $exo !important
+	
+	#product-tabs
+		padding-top: calc(30px + (80 - 30) * (100vw - 320px) / (1920 - 320))
+
+	.tab-content
+		border: none
+		.cke_reset
+			display: none !important
+		> h3
+			text-align: center
+			font-family: $exo !important
+		.tab-pane
+			display: flex
+			flex-wrap: wrap
+			justify-content: center
+			margin: auto auto calc(30px + (70 - 30) * (100vw - 320px) / (1920 - 320))
+			> p
+				width: 100%
+
+			> div
+				background: $w
+				border: 1px solid transparent
+				&:hover
+					border: 1px solid $b
+
+			@media (min-width: 991px)
+				max-width: 87%
+				> div
+					width: calc((100% / 3) - 50px)
+					margin: 20px 25px
+
+			@media (max-width: 990px)
+				max-width: 100%
+	
+			@media (max-width: 990px) and (min-width: 768px)
+				> div
+					width: calc((100% / 3) - 30px)
+					margin: 20px 15px
+
+			@media (max-width: 767px)
+				> div
+					width: calc((100% / 2) - 20px)
+					margin: 10px
+
+			a.btn.btn-primary
+				margin: 40px auto auto
+	
+	#related_slider_related_products_
+		max-width: 89%
+		margin: auto
+		.slick-track		
+			padding: 10px 0
+			.slick-slide
+				box-shadow: 0 0 5px #ccc
+
+		.slick-nav
+			z-index: 0
+
+.media-detail__btn-group
+	display: none !important
+
+.article-inner	
+	padding-bottom: 40px
+
+#waiting_list
+	margin-top: 25px
+.waiting_list_container
+	> h3
+		font-family: $exo !important
+
+	.waiting_list_description
+		*
+			color: #969696 !important
+
+	.flex-group
+		@media (max-width: 767px)
+			input
+				height: 40px
+				margin-bottom: 10px			

@@ -1,0 +1,1 @@
+[{"order_status_id":"7","name":"Order Cancelled"},{"order_status_id":"5","name":"Order Completed"},{"order_status_id":"2","name":"Order Confirmed"},{"order_status_id":"1","name":"Order Received"},{"order_status_id":"15","name":"Order Shipped"},{"order_status_id":"18","name":"Payment Pending"},{"order_status_id":"17","name":"Payment Received"}]
